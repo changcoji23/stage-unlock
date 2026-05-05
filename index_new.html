@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學習里程碑解鎖</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1D3975;
+    --coral: #EB806A;
+    --cream: #FAF1E3;
+    --dark: #393939;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'GenJyuuGothic', '源柔ゴシック', 'Noto Sans TC', 'PingFang TC', sans-serif;
+    background: #f0ede8;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Entry Screen ── */
+  #entryScreen {
+    width: 100%;
+    min-height: 100vh;
+    background: var(--navy);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .entry-icon {
+    font-size: 48px;
+    margin-bottom: 24px;
+  }
+
+  .entry-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .entry-sub {
+    font-size: 14px;
+    color: rgba(250,241,227,0.55);
+    margin-bottom: 40px;
+    line-height: 1.6;
+  }
+
+  .code-input-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .code-input {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.07);
+    color: var(--cream);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .code-input::placeholder { color: rgba(250,241,227,0.25); letter-spacing: 1px; font-size: 14px; font-weight: 400; }
+  .code-input:focus { border-color: var(--coral); }
+
+  .unlock-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--coral);
+    color: var(--cream);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .unlock-btn:hover { opacity: 0.88; transform: scale(1.02); }
+  .unlock-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .error-msg {
+    font-size: 13px;
+    color: #ff8a80;
+    min-height: 20px;
+    transition: opacity 0.2s;
+  }
+
+  /* ── Content Page ── */
+  #contentPage {
+    display: none;
+    width: 100%;
+    background: var(--coral);
+    min-height: 100vh;
+  }
+
+  /* Progress */
+  .progress-bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.25);
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--navy);
+    border-radius: 0 3px 3px 0;
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  }
+  .chapter-label-bar {
+    text-align: center;
+    padding: 8px 20px;
+    font-size: 12px;
+    color: rgba(250,241,227,0.7);
+    letter-spacing: 0.5px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 40px 24px 28px;
+    text-align: center;
+  }
+  .unlock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--navy);
+    color: var(--cream);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 6px 18px;
+    border-radius: 100px;
+    margin-bottom: 22px;
+  }
+  .hero-title {
+    font-size: clamp(24px, 6vw, 44px);
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.2;
+    margin-bottom: 14px;
+  }
+  .hero-title em { font-style: normal; color: var(--navy); }
+  .hero-sub {
+    font-size: 14px;
+    color: rgba(250,241,227,0.78);
+    max-width: 360px;
+    margin: 0 auto;
+    line-height: 1.65;
+  }
+
+  /* Section */
+  .section { padding: 0 20px 24px; }
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: rgba(250,241,227,0.55);
+    margin-bottom: 12px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.15); }
+
+  /* Skill Cards */
+  .skill-cards { display: flex; flex-direction: column; gap: 10px; }
+  .skill-card {
+    background: var(--cream);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .skill-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(29,57,117,0.2); }
+  .skill-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+  }
+  .skill-card-left { display: flex; align-items: center; gap: 14px; }
+  .skill-num {
+    width: 36px; height: 36px;
+    background: var(--navy);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 15px; color: var(--cream);
+    flex-shrink: 0;
+  }
+  .skill-title { font-size: 15px; font-weight: 700; color: var(--dark); line-height: 1.3; }
+  .skill-tag { font-size: 11px; color: var(--coral); font-weight: 500; margin-top: 2px; }
+  .chevron {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(57,57,57,0.2);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.25s, border-color 0.25s;
+    flex-shrink: 0;
+  }
+  .chevron svg { width: 10px; transition: transform 0.3s; }
+  .skill-card.open .chevron { background: var(--navy); border-color: var(--navy); }
+  .skill-card.open .chevron svg path { stroke: var(--cream); }
+  .skill-card.open .chevron svg { transform: rotate(180deg); }
+  .skill-body { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(.4,0,.2,1); }
+  .skill-body-inner { padding: 0 20px 20px; border-top: 1px solid rgba(57,57,57,0.08); }
+  .skill-points { margin: 14px 0 12px; display: flex; flex-direction: column; gap: 8px; }
+  .skill-point { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--dark); line-height: 1.55; }
+  .dot { width: 6px; height: 6px; background: var(--coral); border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .skill-summary {
+    background: rgba(29,57,117,0.07);
+    border-left: 3px solid var(--navy);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px; color: var(--dark); line-height: 1.65;
+  }
+
+  /* Divider */
+  .divider { height: 1px; background: rgba(255,255,255,0.15); margin: 4px 20px 24px; }
+
+  /* Scenario */
+  .scenario-card {
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 22px;
+    margin: 0 20px 28px;
+  }
+  .scenario-tag {
+    display: inline-block;
+    background: var(--coral); color: var(--cream);
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 14px;
+  }
+  .scenario-scene { font-size: 14px; color: rgba(250,241,227,0.75); line-height: 1.65; margin-bottom: 16px; }
+  .scenario-scene strong { color: var(--cream); font-weight: 700; }
+  .scenario-steps { display: flex; flex-direction: column; gap: 8px; }
+  .scenario-step { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: rgba(250,241,227,0.85); line-height: 1.55; }
+  .step-marker {
+    background: var(--coral); color: var(--cream);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .scenario-conclusion {
+    margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    font-size: 13px; color: var(--cream); font-weight: 700; line-height: 1.5;
+  }
+
+  /* Resources */
+  .resources-section { padding: 0 20px 32px; }
+  .resource-list { display: flex; flex-direction: column; gap: 10px; }
+  .resource-item {
+    background: var(--cream); border-radius: 14px;
+    padding: 16px 18px;
+    display: flex; align-items: flex-start; gap: 14px;
+    text-decoration: none; cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .resource-item:hover { transform: translateX(4px); }
+  .resource-priority {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 3px 10px; border-radius: 100px;
+    white-space: nowrap; margin-top: 2px; flex-shrink: 0;
+  }
+  .priority-first { background: var(--navy); color: var(--cream); }
+  .priority-later { background: rgba(57,57,57,0.1); color: rgba(57,57,57,0.55); }
+  .resource-content { flex: 1; }
+  .resource-title { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 4px; line-height: 1.35; }
+  .resource-desc { font-size: 12px; color: rgba(57,57,57,0.6); line-height: 1.5; }
+  .resource-arrow {
+    width: 24px; height: 24px; background: var(--coral);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* Footer */
+  .footer-card { background: var(--navy); padding: 32px 24px; text-align: center; }
+  .footer-emoji { font-size: 28px; display: block; margin-bottom: 10px; }
+  .footer-title { font-size: 17px; font-weight: 700; color: var(--cream); margin-bottom: 6px; }
+  .footer-sub { font-size: 13px; color: rgba(250,241,227,0.6); line-height: 1.65; }
+  .next-btn {
+    margin-top: 20px;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--coral); color: var(--cream);
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    border: none; border-radius: 100px; padding: 11px 28px;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+  }
+  .next-btn:hover { opacity: 0.85; transform: scale(1.03); }
+
+  /* Loading */
+  .loading {
+    color: rgba(250,241,227,0.5);
+    font-size: 14px;
+    min-height: 20px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.5s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- ── Entry Screen ── -->
+<div id="entryScreen">
+  <div class="entry-icon">🔒</div>
+  <h1 class="entry-title">輸入你的解鎖代碼</h1>
+  <p class="entry-sub">完成這個學習階段後<br>服務人員會提供你專屬的代碼</p>
+  <div class="code-input-wrap">
+    <input class="code-input" id="codeInput" type="text" placeholder="輸入代碼" maxlength="20"
+      oninput="this.value = this.value.toUpperCase()"
+      onkeydown="if(event.key==='Enter') tryUnlock()">
+    <button class="unlock-btn" id="unlockBtn" onclick="tryUnlock()">解鎖</button>
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="loading" id="loadingMsg"></div>
+  </div>
+</div>
+
+<!-- ── Content Page ── -->
+<div id="contentPage">
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" id="progressFill"></div>
+  </div>
+  <div class="chapter-label-bar" id="chapterLabel"></div>
+
+  <div class="hero fade-in">
+    <div class="unlock-badge">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+        <rect x="2" y="6" width="10" height="8" rx="2" fill="#FAF1E3"/>
+        <path d="M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6" stroke="#FAF1E3" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="7" cy="10" r="1" fill="#1D3975"/>
+      </svg>
+      STAGE <span id="stageNum"></span> UNLOCKED
+    </div>
+    <h1 class="hero-title">完成<em id="heroStageName"></em><br>你解鎖了這些能力</h1>
+    <p class="hero-sub">點擊下方每張卡片，看看你在這個階段到底練出了什麼。</p>
+  </div>
+
+  <div class="section">
+    <div class="section-label">我具備的能力</div>
+    <div class="skill-cards" id="skillCards"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-label">這些能力在職場長這樣</div>
+  </div>
+
+  <div class="scenario-card" id="scenarioCard">
+    <div class="scenario-tag">真實情境</div>
+    <p class="scenario-scene" id="scenarioScene"></p>
+    <div class="scenario-steps" id="scenarioSteps"></div>
+    <div class="scenario-conclusion" id="scenarioConclusion"></div>
+  </div>
+
+  <div class="resources-section">
+    <div class="section-label">如果想要更強，先看這些</div>
+    <div class="resource-list" id="resourceList"></div>
+  </div>
+
+  <div class="footer-card">
+    <span class="footer-emoji">🎉</span>
+    <div class="footer-title">第 <span id="footerStageNum"></span> 關完成了</div>
+    <div class="footer-sub">繼續保持這個節奏，<br>下一個階段還有更多等著你。</div>
+    <button class="next-btn">繼續下一關 →</button>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwKfcvM-EiYTF6VrBQ63P6dDg9_MrNFWwTDKVUreC-h7tbxdia9taRQeLLG-6NNXQ4ifA/exec';
+const TOTAL_STAGES = 9;
+
+async function tryUnlock() {
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  if (!code) return;
+
+  const btn = document.getElementById('unlockBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const loadingMsg = document.getElementById('loadingMsg');
+
+  btn.disabled = true;
+  errorMsg.textContent = '';
+  loadingMsg.textContent = '驗證中...';
+
+  try {
+    const res = await fetch(`${API_URL}?code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+
+    if (data.error === 'invalid_code') {
+      errorMsg.textContent = '代碼不正確，請確認後再試一次';
+      loadingMsg.textContent = '';
+      btn.disabled = false;
+      return;
+    }
+
+    if (data.error === 'stage_not_found') {
+      errorMsg.textContent = '找不到對應的階段內容，請聯繫服務人員';
+      loadingMsg.textContent = '';
+      btn.disabled = false;
+      return;
+    }
+
+    if (data.success) {
+      renderStage(data.stage, String(data.stage.stage_id));
+    }
+
+  } catch (e) {
+    errorMsg.textContent = '連線發生錯誤，請稍後再試';
+    loadingMsg.textContent = '';
+    btn.disabled = false;
+  }
+}
+
+function renderStage(s, stageId) {
+  const id = parseInt(stageId);
+
+  // Progress
+  document.getElementById('progressFill').style.width = (id / TOTAL_STAGES * 100) + '%';
+  document.getElementById('chapterLabel').textContent = `${'①②③④⑤⑥⑦⑧⑨'[id-1]} ${s.stage_title}`;
+
+  // Hero
+  document.getElementById('stageNum').textContent = id;
+  document.getElementById('heroStageName').textContent = s.stage_title;
+  document.getElementById('footerStageNum').textContent = id;
+
+  // Skill Cards
+  const skillCards = document.getElementById('skillCards');
+  skillCards.innerHTML = '';
+  [1,2,3].forEach(n => {
+    const title = s[`skill_${n}_title`];
+    if (!title) return;
+    const tag = s[`skill_${n}_tag`] || '';
+    const points = (s[`skill_${n}_points`] || '').split('|').filter(Boolean);
+    const summary = s[`skill_${n}_summary`] || '';
+    const numStr = String(n).padStart(2, '0');
+
+    skillCards.innerHTML += `
+      <div class="skill-card" onclick="toggleCard(this)">
+        <div class="skill-card-header">
+          <div class="skill-card-left">
+            <div class="skill-num">${numStr}</div>
+            <div>
+              <div class="skill-title">${title}</div>
+              <div class="skill-tag">${tag}</div>
+            </div>
+          </div>
+          <div class="chevron">
+            <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#393939" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="skill-body">
+          <div class="skill-body-inner">
+            <div class="skill-points">
+              ${points.map(p => `<div class="skill-point"><div class="dot"></div><span>${p.trim()}</span></div>`).join('')}
+            </div>
+            <div class="skill-summary">${summary}</div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  // Scenario
+  document.getElementById('scenarioScene').innerHTML = `<strong>${s.scenario_scene}</strong>`;
+  document.getElementById('scenarioSteps').innerHTML = `
+    <div class="scenario-step"><div class="step-marker">S</div><span><strong style="color:#FAF1E3">發散：</strong>${s.scenario_s}</span></div>
+    <div class="scenario-step"><div class="step-marker">C</div><span><strong style="color:#FAF1E3">收斂：</strong>${s.scenario_c}</span></div>
+    <div class="scenario-step"><div class="step-marker">R</div><span><strong style="color:#FAF1E3">定義：</strong>${s.scenario_r}</span></div>`;
+  document.getElementById('scenarioConclusion').textContent = s.scenario_conclusion;
+
+  // Resources
+  const resList = document.getElementById('resourceList');
+  resList.innerHTML = '';
+  [1,2,3].forEach(n => {
+    const title = s[`res_${n}_title`];
+    if (!title) return;
+    const priority = s[`res_${n}_priority`] || '';
+    const desc = s[`res_${n}_desc`] || '';
+    const url = s[`res_${n}_url`] || '#';
+    const cls = priority === '推薦先看' ? 'priority-first' : 'priority-later';
+
+    resList.innerHTML += `
+      <a class="resource-item" href="${url}" target="_blank">
+        <div class="resource-priority ${cls}">${priority}</div>
+        <div class="resource-content">
+          <div class="resource-title">${title}</div>
+          <div class="resource-desc">${desc}</div>
+        </div>
+        <div class="resource-arrow">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 2M10 2H4M10 2v6" stroke="#FAF1E3" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+      </a>`;
+  });
+
+  // Show content
+  document.getElementById('entryScreen').style.display = 'none';
+  document.getElementById('contentPage').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function toggleCard(card) {
+  const body = card.querySelector('.skill-body');
+  const isOpen = card.classList.contains('open');
+  document.querySelectorAll('.skill-card').forEach(c => {
+    c.classList.remove('open');
+    c.querySelector('.skill-body').style.maxHeight = '0';
+  });
+  if (!isOpen) {
+    card.classList.add('open');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  }
+}
+</script>
+</body>
+</html>
