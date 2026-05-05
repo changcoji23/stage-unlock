@@ -395,36 +395,8 @@
 </div>
 
 <script>
-const SHEET_ID = '1zT6sc4hpAKp6kafuzXQ3T8Sf08fVJRrxKtCtq9dubfE';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwKfcvM-EiYTF6VrBQ63P6dDg9_MrNFWwTDKVUreC-h7tbxdia9taRQeLLG-6NNXQ4ifA/exec';
 const TOTAL_STAGES = 9;
-
-function fetchSheetJsonp(sheetName) {
-  return new Promise((resolve, reject) => {
-    const cbName = 'cb_' + Math.random().toString(36).slice(2);
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=select+*&sheet=${encodeURIComponent(sheetName)}&callback=${cbName}`;
-
-    window[cbName] = function(json) {
-      delete window[cbName];
-      document.head.removeChild(script);
-      try {
-        const cols = json.table.cols.map(c => c.label);
-        const rows = json.table.rows.map(row => {
-          const obj = {};
-          row.c.forEach((cell, i) => { obj[cols[i]] = cell ? String(cell.v ?? '') : ''; });
-          return obj;
-        });
-        resolve(rows);
-      } catch(e) { reject(e); }
-    };
-
-    const script = document.createElement('script');
-    script.src = url;
-    script.onerror = () => { delete window[cbName]; reject(new Error('load error')); };
-    document.head.appendChild(script);
-
-    setTimeout(() => { delete window[cbName]; reject(new Error('timeout')); }, 10000);
-  });
-}
 
 async function tryUnlock() {
   const code = document.getElementById('codeInput').value.trim().toUpperCase();
@@ -439,29 +411,26 @@ async function tryUnlock() {
   loadingMsg.textContent = '驗證中...';
 
   try {
-    const codes = await fetchSheetJsonp('codes');
-    const match = codes.find(r => String(r.code).trim().toUpperCase() === code);
+    const res = await fetch(`${API_URL}?code=${encodeURIComponent(code)}`);
+    const data = await res.json();
 
-    if (!match) {
+    if (data.error === 'invalid_code') {
       errorMsg.textContent = '代碼不正確，請確認後再試一次';
       loadingMsg.textContent = '';
       btn.disabled = false;
       return;
     }
 
-    const stageId = String(match.stage_id).trim();
-    loadingMsg.textContent = '載入內容中...';
-    const stages = await fetchSheetJsonp('stages');
-    const stage = stages.find(r => String(r.stage_id).trim() === stageId);
-
-    if (!stage) {
+    if (data.error === 'stage_not_found') {
       errorMsg.textContent = '找不到對應的階段內容，請聯繫服務人員';
       loadingMsg.textContent = '';
       btn.disabled = false;
       return;
     }
 
-    renderStage(stage, stageId);
+    if (data.success) {
+      renderStage(data.stage, String(data.stage.stage_id));
+    }
 
   } catch (e) {
     errorMsg.textContent = '連線發生錯誤，請稍後再試';
